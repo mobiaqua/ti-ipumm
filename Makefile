@@ -88,7 +88,6 @@ ifeq (bldcfg.mk,$(wildcard bldcfg.mk))
 include bldcfg.mk
 else
 	@echo "No config selected. Please configure the build first and then try to build."
-	@echo "For more info, use 'make help'"
 	@exit 1
 endif
 
