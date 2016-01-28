@@ -1,0 +1,841 @@
+/*
+ * Copyright (c) 2011-2015, Texas Instruments Incorporated
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*
+ *  ======== common.bld ========
+ *
+ */
+
+
+/*
+ *  ======== getCores ========
+ *  Determines which cores to build for.
+ *
+ *  Any argument in XDCARGS which does not contain core= is treated
+ *  as a core name. This way build for multiple cores can be specified by
+ *  separating them with a space.
+ */
+function getCores(xdcArgs)
+{
+    var coreNames = new Array();
+
+    /* Check for any XDCARGS with core=; these are the corenames */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/core=/)) {
+            coreNames.push(xdcArgs[i].substr(5));
+        }
+    }
+
+    return coreNames;
+}
+
+
+/*
+ *  ======== getProfiles ========
+ *  Determines which profiles to build for.
+ *
+ *  Any argument in XDCARGS which does not contain platform= is treated
+ *  as a profile. This way multiple build profiles can be specified by
+ *  separating them with a space.
+ */
+function getProfiles(xdcArgs)
+{
+    var profiles = new Array();
+
+    /* Check for any XDCARGS with profile=; these are profiles. */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/profile=/)) {
+            profiles.push(xdcArgs[i].substr(8));
+        }
+    }
+
+    return profiles;
+}
+
+function getBuildModes(xdcArgs)
+{
+    var buildModes = new Array();
+
+    /* Check for any XDCARGS with buildMode=; these are specific
+       build configuration */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/buildMode=/)) {
+            buildModes.push(xdcArgs[i].substr(10));
+        }
+    }
+    return buildModes;
+}
+
+
+/*
+ *  ======== getTraceType ========
+ *  Determines which trace type to build for.
+ *
+ *  Any argument in XDCARGS which does not contain trace_type= is treated
+ *  as a trace type name. This way build for different trace type can be specified by
+ *  separating them with a space.
+ * XDCARGS="profile=debug core=app_m3 target_build=BUILD_OMAP4 trace_type=UIA_SW_ON"
+ */
+function getTraceType(xdcArgs)
+{
+    var trace_type = new Array();
+
+    /* Check for any XDCARGS with trace_type=; these are the corenames */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/trace_type=/)) {
+            trace_type.push(xdcArgs[i].substr(11));
+        }
+    }
+
+    return trace_type;
+}
+
+
+/*
+ *  ======== getLoadType ========
+ *  Determines whether ducati load is enabled or not .
+ *
+ *  XDCARGS="profile=debug core=app_m3 target_build=BUILD_OMAP4 load_type=LOAD_ON
+ */
+function getLoadType(xdcArgs)
+{
+    var load_type = new Array();
+
+    /* Check for any XDCARGS with load_type=; these are the corenames */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/load_type=/)) {
+            load_type.push(xdcArgs[i].substr(10));
+        }
+    }
+
+    return load_type;
+}
+
+
+/*
+ *  ======== getTimerType ========
+ *  Determines which trace type to build for.
+ *
+ *  XDCARGS="profile=debug core=app_m3 target_build=BUILD_OMAP4 timer_type=CTM_ON
+ */
+function getTimerType(xdcArgs)
+{
+    var timer_type = new Array();
+
+    /* Check for any XDCARGS with timer_type=;  */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/timer_type=/)) {
+            timer_type.push(xdcArgs[i].substr(11));
+        }
+    }
+
+    return timer_type;
+}
+
+
+/*
+ *  ======== getVidPerfMsmtMode ========
+ *  Determines whether ducati video performance measurement is turned ON.
+ *
+ *  XDCARGS="profile=debug core=app_m3 target_build=BUILD_OMAP4 video_perf_mode=MSMT_ON
+ */
+function getVidPerfMsmtMode(xdcArgs)
+{
+    var video_perf_mode = new Array();
+
+    /* Check for any XDCARGS with video_perf_mode=; these are the corenames */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/video_perf_mode=/)) {
+            video_perf_mode.push(xdcArgs[i].substr(16));
+        }
+    }
+
+    return video_perf_mode;
+}
+
+
+
+/*
+ *  ======== getTraceMode ========
+ *  Determines which trace mode to use.
+ *
+ */
+function getTraceMode(xdcArgs)
+{
+    var trace = new Array();
+
+    /* Check for any XDCARGS with profile=; these are profiles. */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/trace=/)) {
+            trace.push(xdcArgs[i].substr(6));
+        }
+    }
+
+    return trace;
+}
+
+/*
+ *  ======== getCacheMode ========
+ *  Determines which Cache mode to use.
+ *
+ */
+function getCacheMode(xdcArgs)
+{
+    var cache_wa = new Array();
+
+    /* Check for any XDCARGS with profile=; these are profiles. */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/cache_wa=/)) {
+            cache_wa.push(xdcArgs[i].substr(9));
+        }
+    }
+
+    return cache_wa;
+}
+
+/*
+ *  ======== getSenPositions ========
+ *  Determines which Cache mode to use.
+ *
+ */
+function getSenPositions(xdcArgs)
+{
+    var SenPosition = new Array();
+
+    /* Check for any XDCARGS with profile=; these are profiles. */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/SenPosition=/)) {
+            SenPosition.push(xdcArgs[i].substr(12));
+        }
+    }
+
+    return SenPosition;
+}
+
+// Possible options - none Virtio
+// ISS_SIMULATOR
+// VIRTIO
+// ...
+function getTargetEnvironment(xdcArgs)
+{
+    var target_env = new Array();
+
+    /* Check for any XDCARGS with profile=; these are profiles. */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/target_env=/)) {
+            target_env.push(xdcArgs[i].substr(11));
+        }
+    }
+    return target_env;
+}
+
+/*
+ *  ======== getTargetBuild ========
+ *  Determines which build to use.
+ *
+ */
+function getTargetBuild(xdcArgs)
+{
+    var build = "";
+
+    /* Check for any XDCARGS with target_build= */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/target_build=/)) {
+            build = xdcArgs[i].substr(13);
+        }
+    }
+
+    return build;
+}
+
+/*
+ *  ======== getGitTag ========
+ *  Determines TAG.
+ *
+ */
+function getGitTag(xdcArgs)
+{
+    var git_tag = "";
+    /* Check for any XDCARGS with git_tag= */
+    for (var i = 0; i < xdcArgs.length; i++) {
+
+        if (xdcArgs[i].match(/git_tag=/)) {
+           git_tag = xdcArgs[i].substr(8);
+           print("i " + i + "\n");
+        }
+    }
+    return git_tag;
+}
+
+/*
+ *  ======== getBoardConfig ========
+ *  Determines which board config to use.
+ *
+ */
+function getBoardConfig(xdcArgs)
+{
+    var board = "";
+
+    /* Check for any XDCARGS with board_config= */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/board_config=/)) {
+            board = xdcArgs[i].substr(13);
+        }
+    }
+
+    if(board.length ==0)
+     board = 'BOARD_CONFIG_TI_BLAZE'
+
+    print("!!!!Configuring for board " + board);
+
+    return board;
+}
+
+/*
+ *  ======== getGitCommitID ========
+ *  Determines commit ID.
+ *
+ */
+function getGitCommitID(xdcArgs)
+{
+    var commit_id = "";
+
+    /* Check for any XDCARGS with git_commit_id= */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/git_commit_id=/)) {
+            commit_id = xdcArgs[i].substr(14);
+        }
+    }
+    print ("commit_id::: " + commit_id +"\n");
+    return commit_id;
+}
+
+/*
+ *  ======== getGitBranch ========
+ *  Determines commit ID.
+ *
+ */
+function getGitBranch(xdcArgs)
+{
+    var branch = "";
+    /* Check for any XDCARGS with git_branch= */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/git_branch=/)) {
+            branch = xdcArgs[i].substr(11);
+        }
+    }
+    return branch;
+}
+
+
+/*
+ *  ======== commonGetVersion ========
+ *  Common commonGetVersion function
+ */
+function GetVersionTag()
+{
+  var exitCode = 1;
+  var verFlags = "";
+  status = {};
+  var verInfo;
+  var git_cmd = "git ";
+  var ipc_ver = "";
+  var ipumm_ver = "";
+
+  var type_cmd = "type ";
+  var flush_cmd = "echo ";
+
+  Program.global.ducati_ver_commit_id = "";
+  Program.global.ducati_ver_branch = "local";
+  ipumm_ver += ipc_ver;
+  Program.global.ducati_ver_tag = ipumm_ver;
+  Program.global.ducati_ver_h264d = "";
+  Program.global.ducati_ver_mpeg4d = "";
+  Program.global.ducati_ver_mpeg2d = "";
+  Program.global.ducati_ver_vc1d = "";
+  Program.global.ducati_ver_mjpegd = "";
+  Program.global.ducati_ver_h264e = "";
+  Program.global.ducati_ver_mpeg4e = "";
+
+
+  /*Check the target environment */
+  var host_env =environment["user.dir"];
+  if(host_env[1] == ':')
+  {
+    git_cmd = "git.exe "
+    echo_cmd = "c:/windows/system32/cmd /c echo "
+  }
+
+  //exitCode = xdc.exec(echo_cmd + "dummy write  " + " >> ducati_version.h", {},  status);
+
+
+  //branch
+
+  exitCode = xdc.exec(git_cmd + "branch -a", {},  status)
+  if (exitCode == -1)
+  {
+    print("Version Information not Generated \n");
+    return;
+  }
+  var lines = status.output.split('\n')
+  for (var i = 0; i < lines.length - 1; i++) {
+    var line = lines[i];
+
+    if(line.indexOf('*')!=-1){
+      var GitBranch = line.substr(2)
+      if (GitBranch.length) {
+            Program.global.ducati_ver_branch = GitBranch;
+            //exitCode = xdc.exec(echo_cmd + "#define GIT_BRANCH_VER  " + "\""+ GitBranch + "\"" + " > ducati_version.h", {},  status);
+            //verFlags += " -DGIT_BRANCH=\\\""+GitBranch+"\\\" "
+
+          }
+      }
+  }
+
+  //commit-id
+  exitCode = xdc.exec(git_cmd + "log --oneline", {},  status)
+  if (exitCode == -1) return verFlags;
+  var lines = status.output.split('\n')
+  var GitCommitId  = lines[0].substr(0,7)
+  if (GitCommitId.length)
+  {
+    Program.global.ducati_ver_commit_id = GitCommitId;
+     //exitCode = xdc.exec(echo_cmd + "#define GIT_COMMIT_ID_VER  " + "\""+ GitCommitId + "\""+ " >> ducati_version.h", {},  status);
+
+
+    //verFlags += " -DGIT_COMMIT_ID=\\\""+GitCommitId+"\\\" "
+    //print (verFlags)
+  }
+
+  //tag
+  exitcode = xdc.exec(git_cmd + "describe", {},  status)
+  if (exitCode == -1) return verFlags;
+  var lines = status.output.split('\n')
+  var tail_pos = lines.length
+  var GitTag = lines[0]
+  var MMIPtag = "MMIP " + GitTag + ipc_ver;
+  if (GitTag.length) {
+
+     //exitCode = xdc.exec(echo_cmd + "#define GIT_TAG_VER " + "\""+ GitTag + "\""+ " >> ducati_version.h", {},  status);
+    Program.global.ducati_ver_tag=MMIPtag;
+    //verFlags += " -DGIT_TAG=\\\""+GitTag+"\\\" "
+    print ("gittag" + GitTag + Program.global.ducati_ver_tag);
+
+  }
+
+  
+  //codec
+    var h264d="", mpeg4d="", vc1d="", mpeg2d="", mpeg4e="", h264e="";
+    var codecFlags="";
+
+  for (var i = 0; i < lines.length - 1; i++) {
+    var line = lines[i];
+    var tail_pos = line.length
+    var CodecVersion = line.substr(tail_pos -11, 11);
+    //print(line + "\n");
+
+    /* First Occurance only */
+    if(h264d.length==0){
+        if(line.indexOf('codec-library H264D')!=-1){
+             if (CodecVersion.length) {
+                 //print(CodecVersion );
+              h264d += "H264D-"+CodecVersion
+              //exitCode = xdc.exec(echo_cmd + "#define VER_H264D " + "\""+ CodecVersion + "\""+ " >> ducati_version.h", {},  status);
+              Program.global.ducati_ver_h264d = h264d;
+           }
+           //codecFlags+= h264d
+           //print("\n  " + codecFlags);
+        }
+    }
+
+    if(mpeg4d.length==0){
+        if(line.indexOf('codec-library MPEG4D')!=-1){
+             if (CodecVersion.length) {
+              mpeg4d += "MPEG4D-"+CodecVersion
+                  //          exitCode = xdc.exec(echo_cmd + "#define VER_MPEG4D " + "\""+ CodecVersion + "\""+ " >> ducati_version.h", {},  status);
+                  Program.global.ducati_ver_mpeg4d = mpeg4d;
+           }
+           //print("\n  " + mpeg4d);
+        }
+    }
+
+    if(mpeg2d.length==0){
+        if(line.indexOf('codec-library MPEG2D')!=-1){
+             if (CodecVersion.length) {
+              mpeg2d += "MPEG2D-"+CodecVersion
+              //print("MPEG2 Codec ver  \n" + CodecVersion + "line " + line + "line2" + lines[i+1]);
+              //exitCode = xdc.exec(echo_cmd + "#define VER_MPEG2D "  + "\""+ CodecVersion + "\""+ " >> ducati_version.h", {},  status);
+              Program.global.ducati_ver_mpeg2d = mpeg2d;
+           }
+           //print("\n  " + mpeg2d);
+        }
+    }
+
+
+    if(vc1d.length==0){
+        if(line.indexOf('codec-library VC1D')!=-1){
+             if (CodecVersion.length) {
+              vc1d += "VC1D-"+CodecVersion
+              //exitCode = xdc.exec(echo_cmd + "#define VER_VC1D "  + "\""+ CodecVersion + "\""+ " >> ducati_version.h", {},  status);
+              Program.global.ducati_ver_vc1d = vc1d;
+           }
+           //print("\n  " + vc1d);
+        }
+    }
+
+
+    if(h264e.length==0){
+        if(line.indexOf('codec-library H264E')!=-1){
+             if (CodecVersion.length) {
+              h264e += "H264E-"+CodecVersion
+             //exitCode = xdc.exec(echo_cmd + "#define VER_H264E "  + "\""+ CodecVersion+ "\"" + " >> ducati_version.h", {},  status);
+             Program.global.ducati_ver_h264e = h264e;
+           }
+           //print("\n  " + h264e);
+        }
+    }
+
+
+    if(mpeg4e.length==0){
+        if(line.indexOf('codec-library MPEG4E')!=-1){
+             if (CodecVersion.length) {
+              mpeg4e += "MPEG4E-"+CodecVersion
+              //exitCode = xdc.exec(echo_cmd + "#define VER_MPEG4E " + "\""+ CodecVersion+ "\"" + " >> ducati_version.h", {},  status);
+              Program.global.ducati_ver_mpeg4e= mpeg4e;
+           }
+           //print("\n  " + mpeg4e);
+        }
+    }
+
+  }
+  //codecFlags= h264d+mpeg4d+vc1d+mpeg2d+mpeg4e+h264e;
+  //print("\n Codec Flags" + codecFlags);
+  //if(codecFlags.length){
+    //exitCode = xdc.exec(echo_cmd + "CODEC FLAGS " + codecFlags + " >> ducati_version.h", {},  status);
+    //verFlags += " -DCODEC_LIB_VERSION=\\\""+codecFlags+"\\\" "
+
+  //}
+
+
+    //return verFlags;
+}
+
+
+/*
+ *  ======== getI2cAllowChan0========
+ *  Determines whether usage of i2c
+ *  channel 0 will be permitted
+ *
+ */
+function getI2cAllowChan0(xdcArgs)
+{
+    var chan0_allow = "";
+
+    /* Check for any XDCARGS with target_build= */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/i2c_allow_chan0=/)) {
+            chan0_allow = xdcArgs[i].substr(16);
+        }
+    }
+
+    return chan0_allow;
+}
+
+/*
+ *  ======== getAllowOffloading ========
+ *  Determines if offloading support is enabled
+ *  in sysm3
+ *
+ */
+function getAllowOffloading(xdcArgs)
+{
+    var allow = "0";
+
+    /* Check for any XDCARGS with offloading_allow= */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/offloading_allow=/)) {
+            allow = xdcArgs[i].substr(17);
+            if (allow.length == 0) {
+                allow = "0";
+            }
+        }
+    }
+
+    return allow;
+}
+
+
+function buildOptions(xdcArgs, aCompileOpts, coreName)
+{
+    var buildMode = new Array();
+
+    var buildMode = getBuildModes(xdcArgs);
+
+    var compileOpts = " -D_DM270  -D_DM290_IMX_MCFIX_ ";
+
+    if (aCompileOpts != null){
+        compileOpts += aCompileOpts;
+    }
+
+    /*Update compile opt if trace is uart*/
+    var traceMode = getTraceMode(xdcArgs);
+    if(traceMode.length != 0)
+    {
+        if(traceMode[0].match("UART"))
+        {
+            compileOpts += " -DUART_TRACES ";
+        }
+    }
+
+    /*Update compile opt if use cache or not */
+    var cacheMode = getCacheMode(xdcArgs);
+    if(cacheMode.length != 0)
+    {
+        if(cacheMode[0].match("NEWWA"))
+        {
+            compileOpts += " -DNEW_USE_CACHE ";
+            compileOpts += " -DUSE_CACHE ";
+        }
+        if(cacheMode[0].match("OLDWA"))
+        {
+            compileOpts += " -DOLD_USE_CACHE ";
+            compileOpts += " -DUSE_CACHE ";
+        }
+    }
+
+    /* update the build flag based on configurAtions */
+    for (var j = 0; j < buildMode.length; j++) {
+
+        if(buildMode[j].match("TESTCOMPONENTS")) {
+            compileOpts += " -DTESTCOMPONENTS=1 ";
+        }
+
+        if(buildMode[j].match("VIDEOCOMPONENTS")) {
+            compileOpts += " -DVIDEOCOMPONENTS=1 ";
+        }
+
+        if(buildMode[j].match("ISSCOMPONENTS")) {
+            compileOpts += " -DISSCOMPONENTS=1 ";
+        }
+
+        if(buildMode[j].match("DRIVERCOMPONENTS")) {
+            compileOpts += " -DDRIVERCOMPONENTS=1 ";
+        }
+    }
+
+
+    if (buildMode.length == 0) {
+        compileOpts += " -DDRIVERCOMPONENTS=1 -DISSCOMPONENTS=1 -DVIDEOCOMPONENTS=1 -DTESTCOMPONENTS=1 ";
+    }
+
+    if(coreName != null) {
+        if(coreName.match(/sys_m3/)){
+            compileOpts += " -DDUCATI_SYS_M3 ";
+        }
+
+        if(coreName.match(/app_m3/)){
+            compileOpts += " -DDUCATI_APP_M3 ";
+        }
+    }
+
+    var I2cAllowChan0 = getI2cAllowChan0(xdcArgs);
+    if(I2cAllowChan0.length != 0)
+    {
+        if(I2cAllowChan0[0].match("1"))
+        {
+            compileOpts += " -DI2C_ID0_WORKS_ON_APP_CORE_PATCH ";
+        }
+    }
+
+    var AllowOffloading = getAllowOffloading(xdcArgs);
+    if(AllowOffloading[0].match("1")) {
+        compileOpts += " -DOFFLOAD_SUPPORT ";
+    }
+
+    return compileOpts;
+}
+
+
+
+/*
+ *  ======== buildLibs ========
+ *  This function generates the makefile goals for the libraries taking
+ *  into account the profile variants, specific ducati cores and build modes
+ *
+ */
+function buildLibs(objList, trgList, xdcArgs, libCompileOpts, coreName)
+{
+    var compileOpts = buildOptions(xdcArgs, libCompileOpts, coreName);
+    var profiles = getProfiles(xdcArgs);
+    //print ("profile length" + profiles.length +"\t" + "profile0" +  profiles[0] +"\n");
+    /* If no profiles were assigned, build for  whole program debug */
+    if (profiles.length == 0) {
+        profiles[0] = "whole_program_debug";
+    }
+
+    for (var i = 0; i < Build.targets.length; i++) {
+
+        var targ = Build.targets[i];
+
+        for (var j = 0; j < profiles.length; j++) {
+
+            var profile         = profiles[j];
+            var profileOpts     = compileOpts;
+
+            if (profile.match(/release/)) {
+                profileOpts += " -O3";
+            }
+
+            if (coreName == null) {
+                var lib_name = 'lib/' + profile + '/' + Pkg.name ;
+            }
+            else {
+                var lib_name = 'lib/' + coreName + '/' + profile + '/' + Pkg.name ;
+            }
+
+            var lib = Pkg.addLibrary(lib_name, targ, {profile: profile, copts: profileOpts});
+
+            lib.addObjects(objList);
+        }
+    }
+}
+
+/*
+ *  ======== buildLibsByName ========
+ *  This function generates the makefile goals for the libraries taking
+ *  into account the profile variants, specific ducati cores and build
+ *  modes. The output library name can be specified by user.
+ *
+ */
+function buildLibsByName(objList, trgList, xdcArgs, libCompileOpts, coreName, name)
+{
+    var compileOpts = buildOptions(xdcArgs, libCompileOpts, coreName);
+    var profiles = getProfiles(xdcArgs);
+    //print ("profile length" + profiles.length +"\t" + "profile0" +  profiles[0] +"\n");
+    /* If no profiles were assigned, build for  whole program debug */
+    if (profiles.length == 0) {
+        profiles[0] = "whole_program_debug";
+    }
+
+    for (var i = 0; i < Build.targets.length; i++) {
+
+        var targ = Build.targets[i];
+
+        for (var j = 0; j < profiles.length; j++) {
+
+            var profile         = profiles[j];
+            var profileOpts     = compileOpts;
+
+            if (profile.match(/release/)) {
+                profileOpts += " -O3";
+            }
+
+            if (coreName == null) {
+                var lib_name = 'lib/' + profile + '/' + name ;
+            }
+            else {
+                var lib_name = 'lib/' + coreName + '/' + profile + '/' + name ;
+            }
+
+            var lib = Pkg.addLibrary(lib_name, targ, {profile: profile, copts: profileOpts});
+
+            lib.addObjects(objList);
+        }
+    }
+}
+
+/*
+ *  ======== supportsCore ========
+ *  Returns true if coreName is in the supported core list. If coreNameList
+ *  is null or empty, that's taken to mean all targets are supported.
+ */
+function supportsCore(coreName, coreNameList)
+{
+    if ((coreNameList == null) || (coreNameList.length == 0)) {
+        return true;
+    }
+
+    for (var j = 0; j < coreNameList.length; j++) {
+        if(coreName.match(coreNameList[j])){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*
+ *  ======== commonGetLibs ========
+ *  Common getLibs function
+ */
+
+function commonGetLibs(prog, bCoreFlag, pkg, dir)
+{
+    var suffix;
+
+    /* find a compatible suffix */
+    if ("findSuffix" in prog.build.target) {
+        suffix = prog.build.target.findSuffix(pkg);
+    }
+    else {
+        suffix = prog.build.target.suffix;
+    }
+
+    var name = pkg.$name + ".a" + suffix;
+    var lib  = "";
+
+    if (bCoreFlag == true) {
+        lib = "lib/" + prog.global.coreName + "/" + pkg.profile + "/" + name;
+    }
+    else {
+        lib = "lib/" + "/" + pkg.profile + "/" + name;
+    }
+
+    if (java.io.File(dir + lib).exists()) {
+        return lib;
+    }
+    else {
+        print("Default lib not found: " + lib +"\nlooking for release lib");
+        if (bCoreFlag == true) {
+          lib = "lib/" + prog.global.coreName + "/" + "release/" + name;
+        }
+        else {
+          lib = "lib/" + "/" + "release/" + name;
+        }
+        if (java.io.File(dir + lib).exists()) {
+            return lib;
+        }
+    }
+
+    /* could not find any library, throw exception */
+    throw Error("Library not found: " + lib);
+}
+
