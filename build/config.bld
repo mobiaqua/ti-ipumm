@@ -62,7 +62,7 @@ for (x = 0; x < arguments.length; x++)
         target.platforms = [ "ti.platform.omap4430.ipu" ];
         target.platform = target.platforms[0];
     }
-    if (arguments[x].match(/^ti.targets.arm.M3=/) )
+    if (arguments[x].match(/^ti.targets.arm.elf.M3=/) )
     {
         targetName = arguments[x].split("=")[0];
         rootDir = arguments[x].split("=")[1];
