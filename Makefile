@@ -65,65 +65,49 @@ export XDCROOT	= $(XDCDIST_TREE)
 
 export XDCPATH  = $(BIOSPROD)/packages;$(IPCSRC)/packages;$(RPMSGSRC)/src;$(CEPROD)/packages;$(FCPROD)/packages;$(XDAISPROD)/packages;/$(CODECSPROD)/extrel/ti/ivahd_codecs/packages;$(DUCATIDCEMMSRC)/src;
 
+ti.targets.C64P ?=
+ti.targets.C64T ?=
+ti.targets.C674 ?=
+
+ti.targets.elf.C64P ?=
+ti.targets.elf.C64T ?=
+ti.targets.elf.C66 ?=
+ti.targets.elf.C674 ?=
+
+ti.targets.arm.elf.M3 ?=
+ti.targets.arm.elf.M4 ?=
+ti.targets.arm.elf.M4F ?=
+
+gnu.targets.arm.M3 ?=
+gnu.targets.arm.M4 ?=
+gnu.targets.arm.M4F ?=
+gnu.targets.arm.A15 ?=
+
+XDCARGS= profile=$(PROFILE) trace_level=$(TRACELEVEL) \
+    ti.targets.C64P=\"$(ti.targets.C64P)\" \
+    ti.targets.C64T=\"$(ti.targets.C64T)\" \
+    ti.targets.arm.elf.M3=\"$(ti.targets.arm.elf.M3)\" \
+    ti.targets.arm.elf.M4=\"$(ti.targets.arm.elf.M4)\" \
+    ti.targets.arm.elf.M4F=\"$(ti.targets.arm.elf.M4F)\" \
+    ti.targets.elf.C64P=\"$(ti.targets.elf.C64P)\" \
+    ti.targets.elf.C64T=\"$(ti.targets.elf.C64T)\" \
+    ti.targets.elf.C66=\"$(ti.targets.elf.C66)\" \
+    ti.targets.elf.C674=\"$(ti.targets.elf.C674)\" \
+    gnu.targets.arm.M3=\"$(gnu.targets.arm.M3)\" \
+    gnu.targets.arm.M4=\"$(gnu.targets.arm.M4)\" \
+    gnu.targets.arm.M4F=\"$(gnu.targets.arm.M4F)\"
+
 # Custom settings for build
 JOBS		?= 1
 # Set profile, always set as release version. Alternate option is "debug"
 PROFILE		?= release
 # Set debug/trace level from 0 to 4
 TRACELEVEL	?= 0
-# Offloads core to sysm3 code
-OFFLOAD		?= 1
-# Set to Non-SMP by default
-FORSMP		?= 0
-# Set Instrumentation to be allowed (ENABLE to enable it)
-SETINST		?= ENABLE
-# Set if Profiler needs to ON or OFF for the build
-PROFILER    ?= DISABLE
 
 all: ducatibin
 
-# Include platform build configuration
-config:
-ifeq (bldcfg.mk,$(wildcard bldcfg.mk))
-include bldcfg.mk
-else
-	@echo "No config selected. Please configure the build first and then try to build."
-	@exit 1
-endif
-
-unconfig:
-	@echo "Removed existing configuration"
-	@rm -f bldcfg.mk
-
-omap4_smp_config: unconfig
-	@echo "Creating new config\c"
-	@echo DUCATI_CONFIG = omap4_smp_config > bldcfg.mk
-	@echo ".\c"
-	@echo MYXDCARGS=\"profile=$(PROFILE) trace_level=$(TRACELEVEL) prof_type=$(PROFILER)\" >> bldcfg.mk
-	@echo ".\c"
-	@echo FORSMP = 1 >> bldcfg.mk
-	@echo ".\c"
-	@echo DUCATIBINNAME = "ducati-m3-ipu.xem3" >> bldcfg.mk
-	@echo INTBINNAME = "ipu.xem3" >> bldcfg.mk
-	@echo ".\c"
-	@echo "done"
-
-clean: config
-	export XDCARGS=$(MYXDCARGS); \
-	 $(XDCROOT)/xdc --jobs=$(JOBS) clean -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
-
-build: config
-ifeq ($(IPCSRC),)
-	@echo "ERROR: IPCSRC not set. Exiting..."
-	@echo "For more info, use 'make help'"
-	@exit 1
-else ifeq ($(TMS470CGTOOLPATH),)
-	@echo "ERROR: TMS470CGTOOLPATH not set. Exiting..."
-	@echo "For more info, use 'make help'"
-	@exit 1
-endif
-	export XDCARGS=$(MYXDCARGS); \
-	$(XDCROOT)/xdc --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
+build:
+	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
 
 ducatibin: build
-	$(TMS470CGTOOLPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/$(INTBINNAME) -o=$(DUCATIBINNAME)
+	$(TMS470CGTOOLPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 -o=ducati-m3-ipu.xem3

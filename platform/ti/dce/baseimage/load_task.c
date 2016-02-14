@@ -36,7 +36,7 @@
 
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Task.h>
-#include <ti/sysbios/smp/Load.h>
+#include <ti/sysbios/utils/Load.h>
 
 #include <stdio.h>
 #include <string.h>

@@ -55,7 +55,7 @@ extern uint32_t dce_debug;
 
 static unsigned int SyslinkMemUtils_VirtToPhys(Ptr Addr)
 {
-    unsigned int pa;
+    xdc_UInt32 pa;
 
     if( !Addr || IpcMemory_virtToPhys((unsigned int) Addr, &pa)) {
         return (0);

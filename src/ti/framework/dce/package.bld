@@ -40,7 +40,7 @@ var commonBld = xdc.loadCapsule("../build/common.bld");
 /* clean lib folder */
 //Pkg.generatedFiles.$add("lib/");
 //Pkg.libDir = "package/";
-var compileOpts = "-DCORE0 --gcc "
+var compileOpts = ""
 
 
 /*
