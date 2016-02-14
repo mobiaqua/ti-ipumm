@@ -96,4 +96,14 @@ if(trace_level == 0) {
 }
 
 Build.targets.$add(target);
+
+/* Eliminate profiles that aren't 'debug' or 'release' */
+for (var t = 0; t < Build.targets.length; t++) {
+    for (prof in Build.targets[t].profiles) {
+        if ((prof != "debug") && (prof != "release")) {
+            delete Build.targets[t].profiles[prof];
+        }
+    }
+}
+
 var Pkg = xdc.module("xdc.bld.PackageContents");
