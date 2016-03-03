@@ -195,6 +195,8 @@ static void ivahd_boot(void)
     /* Read CM IVAHD CLOCK STATE CONTROL is running or gating/ungating transition is on-going */
     DEBUG("Waiting for IVAHD to go out of reset\n");
     while ( ((CM_IVAHD_CLKSTCTRL) & 0x100) & ~0x100 ) ;
+
+    DEBUG("ivahd_boot() CM_IVAHD_CLKCTRL 0x%x CM_IVAHD_CLKSTCTRL 0x%x", CM_IVAHD_CLKCTRL, CM_IVAHD_CLKSTCTRL);
 }
 
 int ivahd_reset(void * handle, void * iresHandle)
@@ -203,7 +205,7 @@ int ivahd_reset(void * handle, void * iresHandle)
      * Reset IVA HD, SL2 and ICONTs
      */
 
-    DEBUG("Resetting IVAHD...");
+    DEBUG("Resetting IVAHD START CM_IVAHD_CLKCTRL 0x%x CM_IVAHD_CLKSTCTRL 0x%x", CM_IVAHD_CLKCTRL, CM_IVAHD_CLKSTCTRL);
 
     /* First put IVA into HW Auto mode */
     CM_IVAHD_CLKSTCTRL |= 0x00000003;
@@ -215,9 +217,20 @@ int ivahd_reset(void * handle, void * iresHandle)
     CM_IVAHD_CLKCTRL = 0x00000000;
     CM_IVAHD_SL2_CLKCTRL = 0x00000000;
 
-    /* Ensure that IVAHD and SL2 are disabled */
+    /* Ensure that IVAHD and SL2 are enabled */
     while (!(CM_IVAHD_CLKCTRL & 0x00030000));
     while (!(CM_IVAHD_SL2_CLKCTRL & 0x00030000));
+
+    /* Precondition - IVA Subsystem Software Warm Reset Sequence
+     * 1. IVA Sequencer CPUS are in IDLE state: CM_IVAHD_CLKCTRL[17:16] IDLEST - has a value 0x2.
+     * 2. IVA subsystem is in STANDBY state: CM_IVAHD_CLKCTRL[18] STBYST - has a value of 0x1.
+     */
+    while (!(CM_IVAHD_CLKCTRL & 0x00060000));
+
+    /* 3. The functional clock to the IVA subsystem has been gated by the PRCM module
+     * CM_IVA_CLKSTCTRL[8] - has a value of 0x0
+     */
+    while (CM_IVAHD_CLKSTCTRL & 0x100);
 
     /* Reset IVAHD sequencers and SL2 */
     RM_IVAHD_RSTCTRL |= 0x00000007;
@@ -248,34 +261,73 @@ int ivahd_reset(void * handle, void * iresHandle)
     while (CM_IVAHD_CLKCTRL & 0x00030000);
     while (CM_IVAHD_SL2_CLKCTRL & 0x00030000);
 
+    DEBUG("Resetting IVAHD COMPLETED");
     return TRUE;
+}
+
+void crash_reset() {
+    ERROR("Received crash_reset");
+
+    IRES_Status ret;
+
+    /* RMAN_unregister IRESMAN_TILEDMEMORY */
+    ret = RMAN_unregister(&IRESMAN_TILEDMEMORY);
+    if( ret != IRES_OK ) {
+        ERROR("RMAN_unregister on IRESMAN_TILEDMEMORY fail with ret %d", ret);
+    }
+
+    /* RMAN_unregister IRESMAN_HDVICP */
+    ret = RMAN_unregister(&IRESMAN_HDVICP);
+    if( ret != IRES_OK ) {
+        ERROR("RMAN_unregister on IRESMAN_HDVICP fail with ret %d", ret);
+    }
+
+    /* RMAN_exit */
+    ret = RMAN_exit();
+    if( ret != IRES_OK ) {
+        ERROR("RMAN_exit fail with ret %d", ret);
+    }
+
+    CERuntime_exit();
+
+    ERROR("crash_reset() CM_IVAHD_CLKCTRL 0x%x CM_IVAHD_CLKSTCTRL 0x%x", CM_IVAHD_CLKCTRL, CM_IVAHD_CLKSTCTRL);
+
+    if( CM_IVAHD_CLKSTCTRL & 0x100 ) {
+        ERROR("crash_report detects IVA_GCLK is running or gate transition on-going");
+    }
+
+    /* RESET RST_LOGIC, RST_SEQ2, and RST_SEQ1 before crashing */
+    RM_IVAHD_RSTCTRL = 0x00000007;
+
+    ERROR("crash_reset() RM_IVAHD_RSTCTRL 0x%x - calling abort NOW", RM_IVAHD_RSTCTRL);
+    abort();
 }
 
 static int ivahd_use_cnt = 0;
 void ivahd_acquire(void)
 {
-    UInt hwiKey = Hwi_disable();
     if (++ivahd_use_cnt == 1) {
         DEBUG("ivahd acquire");
+        UInt hwiKey = Hwi_disable();
         /* switch SW_WAKEUP mode */
         CM_IVAHD_CLKSTCTRL = 0x00000002;
+        Hwi_restore(hwiKey);
     } else {
         DEBUG("ivahd already acquired");
     }
-    Hwi_restore(hwiKey);
 }
 
 void ivahd_release(void)
 {
-    UInt hwiKey = Hwi_disable();
     if (ivahd_use_cnt-- == 1) {
         DEBUG("ivahd release");
+        UInt hwiKey = Hwi_disable();
         /* switch HW_AUTO mode */
         CM_IVAHD_CLKSTCTRL = 0x00000003;
+        Hwi_restore(hwiKey);
     } else {
         DEBUG("ivahd still in use");
     }
-    Hwi_restore(hwiKey);
 }
 
 static Bool allocFxn(IALG_MemRec *memTab, Int numRecs);
@@ -326,13 +378,17 @@ void ivahd_init(uint32_t chipset_id)
 
     ret = RMAN_init();
     if (ret != IRES_OK) {
+        ERROR("RMAN_init is failing ret %d", ret);
+        CERuntime_exit();
         goto end;
     }
 
     /* Register HDVICP with RMAN if not already registered */
     ret = RMAN_register(&IRESMAN_HDVICP, &rman_params);
     if ((ret != IRES_OK) && (ret != IRES_EEXISTS)) {
-        DEBUG("could not register IRESMAN_HDVICP: %d", ret);
+        ERROR("could not register IRESMAN_HDVICP: %d", ret);
+        RMAN_exit();
+        CERuntime_exit();
         goto end;
     }
 
@@ -343,7 +399,13 @@ void ivahd_init(uint32_t chipset_id)
      */
     ret = RMAN_register(&IRESMAN_TILEDMEMORY, &rman_params);
     if ((ret != IRES_OK) && (ret != IRES_EEXISTS)) {
-        DEBUG("could not register IRESMAN_TILEDMEMORY: %d", ret);
+        ERROR("could not register IRESMAN_TILEDMEMORY: %d", ret);
+        ret = RMAN_unregister(&IRESMAN_HDVICP);
+        if( ret != IRES_OK ) {
+            ERROR("RMAN_unregister on IRESMAN_HDVICP fail with ret %d", ret);
+        }
+        RMAN_exit();
+        CERuntime_exit();
         goto end;
     }
 
