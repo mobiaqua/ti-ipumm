@@ -91,6 +91,8 @@ int main(int argc, char **argv)
     hostId = MultiProc_getId("HOST");
     MessageQCopy_init(hostId);
 
+    dce_init();
+
     /* CPU load reporting in the trace. */
     start_load_task();
 
