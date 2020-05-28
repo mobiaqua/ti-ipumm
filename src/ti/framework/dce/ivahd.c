@@ -110,9 +110,6 @@ static uint32_t get_ivahd_config_base(void)
  #define CM_IVAHD_CLKSTCTRL        IVAHD_CM_REG(0x8F00)
  #define CM_IVAHD_CLKCTRL          IVAHD_CM_REG(0x8F20)
  #define CM_IVAHD_SL2_CLKCTRL      IVAHD_CM_REG(0x8F28)
-#else
- #error Undefined Board Type
-#endif
 #elif (defined OMAP5432_ES20)
  #define CM_IVAHD_CLKSTCTRL        IVAHD_CM_REG(0x9200)
  #define CM_IVAHD_CLKCTRL          IVAHD_CM_REG(0x9220)
