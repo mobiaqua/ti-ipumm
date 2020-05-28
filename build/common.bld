@@ -492,7 +492,7 @@ function GetVersionTag()
   var lines = status.output.split('\n')
   var tail_pos = lines.length
   var GitTag = lines[0]
-  var MMIPtag = "MMIP " + GitTag + ipc_ver;
+  var MMIPtag = "MMIP ";
 
   Program.global.ducati_ver_tag=MMIPtag;
   print (Program.global.ducati_ver_tag);
