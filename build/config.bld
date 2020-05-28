@@ -30,10 +30,9 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var Build = xdc.useModule('xdc.bld.BuildEnvironment');
-
-var commonBld = xdc.loadCapsule("../build/common.bld");
-var commonOpts = "-g";
+var Build        = xdc.useModule('xdc.bld.BuildEnvironment');
+var commonBld    = xdc.loadCapsule("../build/common.bld");
+var commonOpts   = "-g";
 
 var targetName;
 var target;
@@ -42,13 +41,26 @@ var rootDir;
 // Logic to support load_type=LOAD_ON build options
 for (x = 0; x < arguments.length; x++)
 {
+    if (arguments[x].match(/^hw_type=/) )
+    {
+        // [1] operation is used on the return value of split(), which is an
+        // array.
+        var hdw_type = arguments[x].split("=")[1];
+    }
+    if (arguments[x].match(/^prof_type=/) )
+    {
+        // [1] operation is used on the return value of split(), which is an
+        // array.
+        var prof_type = arguments[x].split("=")[1];
+    }
     if (arguments[x].match(/^trace_level=/) )
     {
         // [1] operation is used on the return value of split(), which is an
         // array.
         var trace_level = arguments[x].split("=")[1];
     }
-    if (arguments[x].match(/^gnu.targets.arm.M3=/) )
+    if (arguments[x].match(/^gnu.targets.arm.M3=/) ||
+        arguments[x].match(/^gnu.targets.arm.M4=/) )
     {
         targetName = arguments[x].split("=")[0];
         rootDir = arguments[x].split("=")[1];
@@ -59,10 +71,10 @@ for (x = 0; x < arguments.length; x++)
         target = xdc.useModule(targetName);
         target.rootDir = rootDir;
         target.ccOpts.suffix += " -g -D___DSPBIOS___ -DCORE0 -DHOST_TYPE=HOST_UNKNOWN -DBUILD_FOR_SMP ";
-        target.platforms = [ "ti.platform.omap4430.ipu" ];
-        target.platform = target.platforms[0];
+        /*target.lnkOpts.suffix += " -x --retain=.resource_table";*/
     }
-    if (arguments[x].match(/^ti.targets.arm.elf.M3=/) )
+    if (arguments[x].match(/^ti.targets.arm.elf.M3=/) ||
+        arguments[x].match(/^ti.targets.arm.elf.M4=/) )
     {
         targetName = arguments[x].split("=")[0];
         rootDir = arguments[x].split("=")[1];
@@ -74,10 +86,152 @@ for (x = 0; x < arguments.length; x++)
         target.rootDir = rootDir;
         target.ccOpts.suffix += " -g --gcc -D___DSPBIOS___ -DCORE0 -ms -pden -pds=48 -pdew -DHOST_TYPE=HOST_UNKNOWN -DBUILD_FOR_SMP ";
         target.lnkOpts.suffix += " -x --retain=.resource_table --cinit_compression=off --diag_suppress=16032 ";
-        target.platforms = [ "ti.platform.omap4430.ipu" ];
-        target.platform = target.platforms[0];
     }
 }
+
+/************************************
+* Memory Map Information
+************************************/
+if (hdw_type == "OMAP5")
+{
+/*  Memory Map for ti.platforms.sdp5430:IPU
+ *
+ *  --- External Memory ---
+ *  Virtual     Physical        Size            Comment
+ *  ------------------------------------------------------------------------
+ *  0000_4000   ????_????    5F_C000  (  ~6 MB) EXT_CODE
+ *  8000_0000   ????_????    20_0000  (   2 MB) EXT_DATA
+ *  8060_0000   ????_????   290_0000  (  41 MB) EXT_HEAP
+ *  9F00_0000   9F00_0000     6_0000  ( 384 kB) TRACE_BUF
+ *  9F06_0000   9F06_0000     1_0000  (  64 kB) EXC_DATA
+ *  9F07_0000   9F07_0000     2_0000  ( 128 kB) PM_DATA (Power mgmt)
+ */
+    var sdp5430_ExtMemMapIpu = {
+        EXT_CODE: { name: "EXT_CODE", base: 0x00004000, len:  0x005FC000, space: "code", access: "RWX" },
+        EXT_DATA: { name: "EXT_DATA", base: 0x80000000, len:  0x00200000, space: "data", access: "RW" },
+        EXT_HEAP: { name: "EXT_HEAP", base: 0x80200000, len:  0x02900000, space: "data", access: "RW" },
+        TRACE_BUF: { name: "TRACE_BUF", base: 0x9F000000, len:  0x00060000, space: "data", access: "RW" },
+        EXC_DATA: { name: "EXC_DATA", base: 0x9F060000, len:  0x00010000, space: "data", access: "RW" },
+        PM_DATA: { name: "PM_DATA", base: 0x9F070000, len:  0x00020000, space: "data", access: "RWX" }
+    };
+
+    Build.platformTable["ti.platforms.sdp5430:IPU"] = {
+        externalMemoryMap: [
+            [ "EXT_CODE", sdp5430_ExtMemMapIpu.EXT_CODE ],
+            [ "EXT_DATA", sdp5430_ExtMemMapIpu.EXT_DATA ],
+            [ "EXT_HEAP", sdp5430_ExtMemMapIpu.EXT_HEAP ],
+            [ "TRACE_BUF", sdp5430_ExtMemMapIpu.TRACE_BUF ],
+            [ "EXC_DATA", sdp5430_ExtMemMapIpu.EXC_DATA ],
+            [ "PM_DATA", sdp5430_ExtMemMapIpu.PM_DATA ]
+        ],
+        codeMemory: "EXT_CODE",
+        dataMemory: "EXT_DATA",
+        stackMemory: "EXT_DATA",
+    };
+}
+else if (hdw_type == "OMAP4")
+{
+/*  Memory Map for ti.platform.omap4430.ipu
+ *
+ *  --- External Memory ---
+ *  Virtual     Physical        Size            Comment
+ *  ------------------------------------------------------------------------
+ *  0000_4000   ????_????    5F_C000  (  ~6 MB) EXT_CODE
+ *  8000_0000   ????_????    20_0000  (   2 MB) EXT_DATA
+ *  8060_0000   ????_????   290_0000  (  41 MB) EXT_HEAP
+ *  9F00_0000   9F00_0000     6_0000  ( 384 kB) TRACE_BUF
+ *  9F06_0000   9F06_0000     1_0000  (  64 kB) EXC_DATA
+ *  9F07_0000   9F07_0000     2_0000  ( 128 kB) PM_DATA (Power mgmt)
+ */
+    var omap4430_ExtMemMapIpu = {
+        EXT_CODE: { name: "EXT_CODE", base: 0x00004000, len:  0x005FC000, space: "code", access: "RWX" },
+        EXT_DATA: { name: "EXT_DATA", base: 0x80000000, len:  0x00200000, space: "data", access: "RW" },
+        EXT_HEAP: { name: "EXT_HEAP", base: 0x80200000, len:  0x02900000, space: "data", access: "RW" },
+        TRACE_BUF: { name: "TRACE_BUF", base: 0x9F000000, len:  0x00060000, space: "data", access: "RW" },
+        EXC_DATA: { name: "EXC_DATA", base: 0x9F060000, len:  0x00010000, space: "data", access: "RW" },
+        PM_DATA: { name: "PM_DATA", base: 0x9F070000, len:  0x00020000, space: "data", access: "RWX" }
+    };
+
+    Build.platformTable["ti.platform.omap4430.ipu"] = {
+        externalMemoryMap: [
+            [ "EXT_CODE", omap4430_ExtMemMapIpu.EXT_CODE ],
+            [ "EXT_DATA", omap4430_ExtMemMapIpu.EXT_DATA ],
+            [ "EXT_HEAP", omap4430_ExtMemMapIpu.EXT_HEAP ],
+            [ "TRACE_BUF", omap4430_ExtMemMapIpu.TRACE_BUF ],
+            [ "EXC_DATA", omap4430_ExtMemMapIpu.EXC_DATA ],
+            [ "PM_DATA", omap4430_ExtMemMapIpu.PM_DATA ]
+        ],
+        codeMemory: "EXT_CODE",
+        dataMemory: "EXT_DATA",
+        stackMemory: "EXT_DATA",
+    };
+}
+else if (hdw_type == "VAYU")
+{
+/*  Memory Map for ti.platforms.evmDRA7XX:ipu2
+ *
+ *  --- External Memory ---
+ *  Virtual     Physical        Size            Comment
+ *  ------------------------------------------------------------------------
+ *  0000_4000   ????_????    5F_C000  (  ~6 MB) EXT_CODE
+ *  8000_0000   ????_????    20_0000  (   2 MB) EXT_DATA
+ *  8060_0000   ????_????   290_0000  (  41 MB) EXT_HEAP
+ *  9F00_0000   9F00_0000     6_0000  ( 384 kB) TRACE_BUF
+ *  9F06_0000   9F06_0000     1_0000  (  64 kB) EXC_DATA
+ *  9F07_0000   9F07_0000     2_0000  ( 128 kB) PM_DATA (Power mgmt)
+ */
+    var evmDRA7XX_ExtMemMapIpu2 = {
+        EXT_CODE: { name: "EXT_CODE", base: 0x00004000, len:  0x005FC000, space: "code", access: "RWX" },
+        EXT_DATA: { name: "EXT_DATA", base: 0x80000000, len:  0x00200000, space: "data", access: "RW" },
+        EXT_HEAP: { name: "EXT_HEAP", base: 0x80200000, len:  0x02900000, space: "data", access: "RW" },
+        TRACE_BUF: { name: "TRACE_BUF", base: 0x9F000000, len:  0x00060000, space: "data", access: "RW" },
+        EXC_DATA: { name: "EXC_DATA", base: 0x9F060000, len:  0x00010000, space: "data", access: "RW" },
+        PM_DATA: { name: "PM_DATA", base: 0x9F070000, len:  0x00020000, space: "data", access: "RWX" }
+    };
+
+    Build.platformTable["ti.platforms.evmDRA7XX:ipu2"] = {
+        externalMemoryMap: [
+            [ "EXT_CODE", evmDRA7XX_ExtMemMapIpu2.EXT_CODE ],
+            [ "EXT_DATA", evmDRA7XX_ExtMemMapIpu2.EXT_DATA ],
+            [ "EXT_HEAP", evmDRA7XX_ExtMemMapIpu2.EXT_HEAP ],
+            [ "TRACE_BUF", evmDRA7XX_ExtMemMapIpu2.TRACE_BUF ],
+            [ "EXC_DATA", evmDRA7XX_ExtMemMapIpu2.EXC_DATA ],
+            [ "PM_DATA", evmDRA7XX_ExtMemMapIpu2.PM_DATA ]
+        ],
+        codeMemory: "EXT_CODE",
+        dataMemory: "EXT_DATA",
+        stackMemory: "EXT_DATA",
+    };
+}
+
+
+target.platforms = [
+		      "ti.platform.omap4430.core0", //0
+		      "ti.platform.omap4430.core1", //1
+                      "ti.platform.omap4430.core0_512", //2
+                      "ti.platform.omap4430.core1_512", //3
+		      "ti.platform.omap54xx.core0", //4
+		      "ti.platform.omap54xx.core1", //5
+                      "ti.platform.omap4430.ipu", //6
+		      "ti.platforms.sdp5430:IPU", //7
+                      "ti.platforms.evmDRA7XX:ipu2", //8
+		    ];
+
+
+/**********  PSI_KPI instrumentation ***********/
+if (prof_type == "ENABLE")
+{
+    var psi_kpi_flag = true
+    print("Profiler enabled");
+    target.ccOpts.suffix += " -DBUILD_PSI_KPI";
+}
+else
+{
+    var psi_kpi_flag = false
+}
+/**********  PSI_KPI instrument. End ***********/
+
+/*****************  Tracing ********************/
 
 if(trace_level == 0) {
     target.ccOpts.suffix += " -DDCE_DEBUG_LEVEL=0";
@@ -93,6 +247,54 @@ if(trace_level == 0) {
 } else if(trace_level >= 4) {
     target.ccOpts.suffix += " -DDCE_DEBUG_ENABLE";
     target.ccOpts.suffix += " -DDCE_DEBUG_LEVEL=4";
+}
+
+/*****************  Tracing ********************/
+
+
+var omap5_zebu = false;
+var omap5_virtio = false;
+var build_omap5 = false;
+var omap5_es20 = false;
+var build_vayu = false;
+var hw_OMAP4 = 0;
+var hw_OMAP5 = 1;
+var hw_VAYU = 2;
+
+var VIRTIO = 0;
+var ZEBU = 0;
+var ES10 = 1;
+var ES20 = 2;
+var HwType = hw_OMAP4; //default omap4
+
+var HwVer = ES20; //Default ES2.0
+SMPmode = true;
+if (hdw_type == "OMAP5")
+{
+    build_omap5 = true;
+    HwType = hw_OMAP5;
+    ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_OMAP5";
+    HwVer = ES20;
+    omap5_es20 = true;
+    ipu_tgt.ccOpts.suffix += " -DOMAP5432_ES20";
+    ipu_tgt.platform = ipu_tgt.platforms[7];
+}
+else if (hdw_type == "VAYU")
+{
+    HwType = hw_VAYU;
+    HwVer = ES10;
+    var build_vayu = true;
+    ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_VAYU";
+    ipu_tgt.ccOpts.suffix += " -DVAYU_ES10";
+    ipu_tgt.platform = ipu_tgt.platforms[8];
+}
+else
+{
+    HWType = hw_OMAP4;
+    var build_omap4 = true;
+    HwVer = ES20;
+    ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_OMAP4";
+    ipu_tgt.platform = ipu_tgt.platforms[6];
 }
 
 Build.targets.$add(target);

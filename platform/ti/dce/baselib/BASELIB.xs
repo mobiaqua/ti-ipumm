@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Texas Instruments Incorporated
+ * Copyright (c) 2015, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,50 +30,50 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DCE_RPC_H__
-#define __DCE_RPC_H__
-
-/* RPC layer types.. these define the payload of messages between IPUMM
- * and MPU.  This should be kept in sync between firmware build and
- * driver.
+/*
+ *  ======== package.xs ========
  *
- * TODO: xxx_control(XDM_GETVERSION) is a bit awkward to deal with, because
- * this seems to be the one special case where status->data is used..
- * possibly we should define a special ioctl and msg to handle this case.
  */
 
-/* Message-Ids:
+
+/*
+ *  ======== init ========
  */
-typedef enum dce_rpc_call {
-    DCE_RPC_ENGINE_OPEN = 0,
-    DCE_RPC_ENGINE_CLOSE,
-    DCE_RPC_CODEC_CREATE,
-    DCE_RPC_CODEC_CONTROL,
-    DCE_RPC_CODEC_GET_VERSION,
-    DCE_RPC_CODEC_PROCESS,
-    DCE_RPC_CODEC_DELETE
-} dce_rpc_call;
+function init()
+{
+    /*
+     * install a SYS/BIOS startup function
+     * it will be called during BIOS_start()
+     */
+    var BIOS = xdc.useModule('ti.sysbios.BIOS');
+}
 
 
 
-#define MAX_NAME_LENGTH           32
+/*
+ *  ======== Package.getLibs ========
+ *  This function is called when a program's configuration files are
+ *  being generated and it returns the name of a library appropriate
+ *  for the program's configuration.
+ */
 
-typedef enum dce_codec_type {
-    OMAP_DCE_VIDENC2 = 1,
-    OMAP_DCE_VIDDEC3 = 2
-} dce_codec_type;
+function getLibs(prog)
+{
+    var pkg = "ipu";
+    var commonBld = xdc.loadCapsule("build/common.bld");
+    var dir = xdc.getPackageBase("platform.ti.dce.baselib");
+    var lib = commonBld.commonGetLibs(prog, true, pkg, dir);
+    return lib;
 
-/* Structures of RPC */
-typedef struct dce_connect {
-    uint32_t chipset_id;
-    uint32_t debug;
-} dce_connect;
+}
 
-typedef struct dce_engine_open {
-    char          name[MAX_NAME_LENGTH];      /* engine name (in) */
-    Engine_Attrs *engine_attrs;               /* engine attributes (in) */
-    Engine_Error  error_code;                 /* error code (out) */
-} dce_engine_open;
+/*
+ *  ======== package.close ========
+ */
+function close()
+{
 
-#endif /* __DCE_RPC_H__ */
-
+    if (xdc.om.$name != 'cfg') {
+        return;
+    }
+}

@@ -34,73 +34,80 @@
 #include <xdc/cfg/global.h>
 #include <xdc/runtime/System.h>
 #include <xdc/runtime/Diags.h>
+#include <xdc/runtime/Error.h>
 
-#include <ti/ipc/MultiProc.h>
 #include <ti/sysbios/BIOS.h>
-#include <ti/sysbios/knl/Task.h>
-#include <ti/ipc/rpmsg/VirtQueue.h>
-#include <ti/resources/IpcMemory.h>
+#include <ti/ipc/rpmsg/_RPMessage.h>
+#include <ti/ipc/remoteproc/Resource.h>
 
-#include <ti/grcm/RcmTypes.h>
-#include <ti/grcm/RcmServer.h>
-#include <ti/framework/dce/dce_priv.h>
+#include <ti/utils/osal/trace.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-extern uint32_t dce_debug;
+#include <platform/ti/dce/baselib/ipumm_main.h>
 
-/* Legacy function to allow Linux side rpmsg sample tests to work: */
+// Include the custom resource table for memory configuration.
+#if (defined VAYU_ES10)
+   #if (defined BUILD_FOR_QNX)
+   #include "qnx_custom_rsc_table_vayu_ipu.h"
+   #else
+   #include "custom_rsc_table_vayu_ipu.h"
+   #endif
+#elif (defined OMAP5432_ES20)
+#include "custom_rsc_table_omap5_ipu.h"
+#elif (defined BUILD_FOR_OMAP4)
+#include "custom_rsc_table_omap4_ipu.h"
+#endif
+
+extern uint32_t    dce_debug;
+extern Uint32 kpi_control;
 
 static unsigned int SyslinkMemUtils_VirtToPhys(Ptr Addr)
 {
-    xdc_UInt32 pa;
+    unsigned int    pa;
 
-    if( !Addr || IpcMemory_virtToPhys((unsigned int) Addr, &pa)) {
+    if( !Addr || Resource_virtToPhys((unsigned int) Addr, &pa)) {
         return (0);
     }
     return (pa);
 }
 
-void *MEMUTILS_getPhysicalAddr(Ptr vaddr)
-{
-    unsigned int paddr = SyslinkMemUtils_VirtToPhys(vaddr);
-
-    DEBUG("virtual addr:%x\tphysical addr:%x", vaddr, paddr);
-    return (void *)paddr;
-}
+#pragma DATA_SECTION(ipummversion, ".ipummversion")
+char ipummversion[128] = ducati_ver_tag;
 
 void tools_ShowVersion()
 {
-    System_printf("\n\n **** IPUMM VERSION INFO **** \n\nCompile DATE %s TIME\n", __DATE__, __TIME__);
+    // ipummversion is needed here or else the compiler will remove ipummversion thinking that it is not used.
+    System_printf("\n\n **** IPUMM VERSION INFO **** \n\nCompile DATE %s TIME %s \n", __DATE__, __TIME__, ipummversion);
+
+    System_printf("CODEC-VER BEGIN: \n");
+
+    System_printf("\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n \n",
+                  ducati_ver_h264d, ducati_ver_mpeg4d, ducati_ver_mpeg2d, ducati_ver_vc1d, ducati_ver_mjpegd);
+
+    System_printf("\t%s\n\t%s\n\t%s\n",
+                  ducati_ver_h264e, ducati_ver_mpeg4e, ducati_ver_mjpege);
+
+    System_printf("CODEC-VER END: \n");
+
+    System_printf("\n** IPUMM VERSION INFO END ** \n");
 
     System_printf("Trace level PA 0x%x Trace Level %d\
                    \nTrace Usage: level:[0-4: 0-no trace, 1-err, 2-debug, 3-info, 4-CE,FC,IPC traces] \n\n",
-                  MEMUTILS_getPhysicalAddr(&dce_debug), dce_debug);
+                  SyslinkMemUtils_VirtToPhys(&dce_debug), dce_debug);
+    System_printf("Trace Buffer PA 0x%x kpi_control (PA 0x%x value 0x%x)\n", SyslinkMemUtils_VirtToPhys((Ptr)(TRACEBUFADDR)), SyslinkMemUtils_VirtToPhys((Ptr)(&kpi_control)), kpi_control);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char * *argv)
 {
-    extern void start_load_task(void);
-    UInt16 hostId;
-
-    /* Set up interprocessor notifications */
-    System_printf("%s starting..\n", MultiProc_getName(MultiProc_self()));
-
-    hostId = MultiProc_getId("HOST");
-    MessageQCopy_init(hostId);
-
-    dce_init();
-
-    /* CPU load reporting in the trace. */
-    start_load_task();
+    IPUMM_Main(argc, argv);
 
     /* Dump Tools version */
     tools_ShowVersion();
 
     BIOS_start();
 
-    return 0;
+    return (0);
 }
-

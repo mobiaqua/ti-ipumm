@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Texas Instruments Incorporated
+ * Copyright (c) 2011-2015, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,50 +30,63 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DCE_RPC_H__
-#define __DCE_RPC_H__
+#include <xdc/std.h>
+#include <xdc/cfg/global.h>
+#include <xdc/runtime/System.h>
+#include <xdc/runtime/Diags.h>
+#include <xdc/runtime/Error.h>
 
-/* RPC layer types.. these define the payload of messages between IPUMM
- * and MPU.  This should be kept in sync between firmware build and
- * driver.
- *
- * TODO: xxx_control(XDM_GETVERSION) is a bit awkward to deal with, because
- * this seems to be the one special case where status->data is used..
- * possibly we should define a special ioctl and msg to handle this case.
- */
+#include <ti/ipc/MultiProc.h>
+#include <ti/sysbios/BIOS.h>
+#include <ti/sysbios/knl/Task.h>
+#include <ti/ipc/rpmsg/_RPMessage.h>
+#include <ti/ipc/remoteproc/Resource.h>
 
-/* Message-Ids:
- */
-typedef enum dce_rpc_call {
-    DCE_RPC_ENGINE_OPEN = 0,
-    DCE_RPC_ENGINE_CLOSE,
-    DCE_RPC_CODEC_CREATE,
-    DCE_RPC_CODEC_CONTROL,
-    DCE_RPC_CODEC_GET_VERSION,
-    DCE_RPC_CODEC_PROCESS,
-    DCE_RPC_CODEC_DELETE
-} dce_rpc_call;
+#include <ti/grcm/RcmTypes.h>
+#include <ti/grcm/RcmServer.h>
+#include <ti/framework/dce/dce_priv.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 
+/* Legacy function to allow Linux side rpmsg sample tests to work: */
+extern void start_ping_tasks();
 
-#define MAX_NAME_LENGTH           32
+static unsigned int SyslinkMemUtils_VirtToPhys(Ptr Addr)
+{
+    unsigned int    pa;
 
-typedef enum dce_codec_type {
-    OMAP_DCE_VIDENC2 = 1,
-    OMAP_DCE_VIDDEC3 = 2
-} dce_codec_type;
+    if( !Addr || Resource_virtToPhys((unsigned int) Addr, &pa)) {
+        return (0);
+    }
+    return (pa);
+}
 
-/* Structures of RPC */
-typedef struct dce_connect {
-    uint32_t chipset_id;
-    uint32_t debug;
-} dce_connect;
+void *MEMUTILS_getPhysicalAddr(Ptr vaddr)
+{
+    unsigned int    paddr = SyslinkMemUtils_VirtToPhys(vaddr);
 
-typedef struct dce_engine_open {
-    char          name[MAX_NAME_LENGTH];      /* engine name (in) */
-    Engine_Attrs *engine_attrs;               /* engine attributes (in) */
-    Engine_Error  error_code;                 /* error code (out) */
-} dce_engine_open;
+    DEBUG("virtual addr:%x\tphysical addr:%x", vaddr, paddr);
+    return ((void *)paddr);
+}
 
-#endif /* __DCE_RPC_H__ */
+int IPUMM_Main(int argc, char * *argv)
+{
+    extern void start_load_task(void);
+    UInt16    hostId;
 
+    /* Set up interprocessor notifications */
+    System_printf("%s starting..\n", MultiProc_getName(MultiProc_self()));
+
+    hostId = MultiProc_getId("HOST");
+    RPMessage_init(hostId);
+
+    dce_init();
+
+    /* CPU load reporting in the trace. */
+    start_load_task();
+
+    return (0);
+}

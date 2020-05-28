@@ -277,6 +277,56 @@ function getTargetBuild(xdcArgs)
 }
 
 /*
+ *  ======== getHwType ========
+ *  Determines which OMAP version to use.
+ *
+ */
+function getHwType(xdcArgs)
+{
+    var omap_version="OMAP4"; //Setting default values
+
+    /* Check for any XDCARGS with hw_type=; these are the corenames */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/hw_type=/)) {
+            // [1] operation is used on the return value of split(), which
+            // is an array.
+            var omap_version = xdcArgs[i].split("=")[1];
+        }
+    }
+
+    return omap_version;
+}
+
+
+/*
+ *  ======== isSmpBios ========
+ *  Determines which type of BIOS is used - SMP or non-SMP.
+ *
+ */
+function isSmpBios(xdcArgs)
+{
+    var SMPmode = false; //Setting default value to non-SMP
+    var bios_type = "";
+
+    /* Check for any XDCARGS with BIOS_type=; this tells us if BIOS is SMP or not  */
+    for (var i = 0; i < xdcArgs.length; i++) {
+        if (xdcArgs[i].match(/BIOS_type=/)) {
+            // [1] operation is used on the return value of split(), which
+            // is an array.
+            var bios_type = xdcArgs[i].split("=")[1];
+        }
+    }
+
+    if (bios_type == "SMP")
+    {
+        SMPmode = true;
+    }
+
+    return SMPmode;
+}
+
+
+/*
  *  ======== getGitTag ========
  *  Determines TAG.
  *
@@ -382,6 +432,7 @@ function GetVersionTag()
   Program.global.ducati_ver_mpeg2d = "";
   Program.global.ducati_ver_vc1d = "";
   Program.global.ducati_ver_mjpegd = "";
+  Program.global.ducati_ver_mjpege = "";
   Program.global.ducati_ver_h264e = "";
   Program.global.ducati_ver_mpeg4e = "";
 
@@ -442,18 +493,12 @@ function GetVersionTag()
   var tail_pos = lines.length
   var GitTag = lines[0]
   var MMIPtag = "MMIP " + GitTag + ipc_ver;
-  if (GitTag.length) {
 
-     //exitCode = xdc.exec(echo_cmd + "#define GIT_TAG_VER " + "\""+ GitTag + "\""+ " >> ducati_version.h", {},  status);
-    Program.global.ducati_ver_tag=MMIPtag;
-    //verFlags += " -DGIT_TAG=\\\""+GitTag+"\\\" "
-    print ("gittag" + GitTag + Program.global.ducati_ver_tag);
+  Program.global.ducati_ver_tag=MMIPtag;
+  print (Program.global.ducati_ver_tag);
 
-  }
-
-  
   //codec
-    var h264d="", mpeg4d="", vc1d="", mpeg2d="", mpeg4e="", h264e="";
+    var h264d="", mpeg4d="", vc1d="", mpeg2d="", mpeg4e="", h264e="", mjpege="";
     var codecFlags="";
 
   for (var i = 0; i < lines.length - 1; i++) {
@@ -535,8 +580,19 @@ function GetVersionTag()
         }
     }
 
+    if(mjpege.length==0){
+        if(line.indexOf('codec-library MJPEGE')!=-1){
+             if (CodecVersion.length) {
+              mjpege += "MJPEGE-"+CodecVersion
+              //exitCode = xdc.exec(echo_cmd + "#define VER_MJPEGE " + "\""+ CodecVersion+ "\"" + " >> ducati_version.h", {},  status);
+              Program.global.ducati_ver_mjpege= mjpege;
+           }
+           //print("\n  " + mjpege);
+        }
+    }
+
   }
-  //codecFlags= h264d+mpeg4d+vc1d+mpeg2d+mpeg4e+h264e;
+  //codecFlags= h264d+mpeg4d+vc1d+mpeg2d+mpeg4e+h264e+mjpege;
   //print("\n Codec Flags" + codecFlags);
   //if(codecFlags.length){
     //exitCode = xdc.exec(echo_cmd + "CODEC FLAGS " + codecFlags + " >> ducati_version.h", {},  status);
@@ -648,6 +704,26 @@ function buildOptions(xdcArgs, aCompileOpts, coreName)
 
         if(buildMode[j].match("DRIVERCOMPONENTS")) {
             compileOpts += " -DDRIVERCOMPONENTS=1 ";
+        }
+    }
+
+
+    /*Update compile opt if use cache or not */
+    var SenPosition = getSenPositions(xdcArgs);
+    if(SenPosition.length != 0)
+    {
+        if(SenPosition[0].match("TABLET"))
+        {
+            compileOpts += " -DTABLET_SEN_POSITION ";
+        }
+
+        if(SenPosition[0].match("SDP"))
+        {
+            compileOpts += " -DSDP_SEN_POSITION ";
+        }
+        if(SenPosition[0].match("BLAZE"))
+        {
+            compileOpts += " -DBLAZE_SEN_POSITION ";
         }
     }
 

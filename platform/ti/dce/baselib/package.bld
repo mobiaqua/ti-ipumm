@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, Texas Instruments Incorporated
+ * Copyright (c) 2015, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*
- *  ======== WTSD_DucatiMMSW/platform/baseimage/package.bld ========
+ *  ======== ipumm/platform/ti/dce/baselib/package.bld ========
  */
 
 var Build = xdc.useModule('xdc.bld.BuildEnvironment');
@@ -41,7 +41,10 @@ var waval = 0;
 var commonBld = xdc.loadCapsule("../build/common.bld");
 
 var SRC_FILES_APP = [
-     "main.c",
+     "ipumm_main.c",
+     "ping_tasks.c",
+     "load_task.c",
+     "iresman_tiledmemory.c"
 ];
 
 var SRC_FILES_SYS = [
@@ -83,8 +86,8 @@ for (var i = 0; i < Build.targets.length; i++) {
             var profileOpts    = commonBld.buildOptions(arguments, compileOpts, coreName);
 
 
-            var out_name = 'out/' + coreName + '/' + profile + '/' + coreName;
-            var out_name_qnx = 'out/' + coreName + '/' + profile + '/' + "qnx_ipu";
+            var lib_name = 'lib/' + coreName + '/' + profile + '/' + coreName;
+            var lib_name_qnx = 'lib/' + coreName + '/' + profile + '/' + "qnx_ipu";
 
             print ("config file: " + cfgFileName + "\n");
             print ("profile: " + profile + "\n");
@@ -92,20 +95,16 @@ for (var i = 0; i < Build.targets.length; i++) {
             print("HwType = " + HwType);
             print("HwVer = " + HwVer);
 
-            var exe = Pkg.addExecutable(out_name, targ, targ.platform,
-                {cfgScript:cfgFileName, profile:profile, copts: profileOpts,
-                           cfgArgs:"{HwType:" + HwType + ",enableSMP:" + SMPmode +
-                                   ",psi_kpi_hooks:" + psi_kpi_flag + ",HwVer:" + HwVer + "}" });
+            var mylib = Pkg.addLibrary(lib_name, targ,
+                {profile:profile, copts: profileOpts });
 
-            exe.addObjects(SRC_FILES);
+            mylib.addObjects(SRC_FILES);
 
-            var qnxExe = Pkg.addExecutable(out_name_qnx, targ, targ.platform,
-                {cfgScript:cfgFileName, profile:profile, copts: profileOpts,
-                           cfgArgs:"{HwType:" + HwType + ",enableSMP:" + SMPmode +
-                                   ",psi_kpi_hooks:" + psi_kpi_flag + ",HwVer:" + HwVer + "}",
+            var qnxLib = Pkg.addLibrary(lib_name_qnx, targ,
+                {profile:profile, copts: profileOpts,
                            defs: "-D BUILD_FOR_QNX" });
 
-            qnxExe.addObjects(SRC_FILES);
+            qnxLib.addObjects(SRC_FILES);
         }
     }
 }

@@ -40,7 +40,6 @@
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/hal/Hwi.h>
 #include <ti/pm/IpcPower.h>
-#include <ti/pm/_IpcPower.h>
 #include <ti/sdo/ce/Engine.h>
 #include <ti/sdo/ce/CERuntime.h>
 #include <xdc/cfg/global.h>
@@ -53,47 +52,76 @@
 #include <ti/sdo/fc/ires/tiledmemory/iresman_tiledmemory.h>
 #include <ti/sdo/fc/rman/rman.h>
 #include <ti/sdo/fc/ires/hdvicp/hdvicp2.h>
-#include <ti/resources/IpcMemory.h>
 #include <ti/sdo/fc/ires/hdvicp/hdvicp2.h>
 
-static uint32_t ivahd_base = 0;
-static uint32_t cm_ivahd_base = 0;
+#include <ti/ipc/remoteproc/Resource.h>
+
+//#define MEMORYSTATS_DEBUG
+
+static uint32_t    ivahd_base = 0;
+static uint32_t    ivahd_cm_base = 0;
+static uint32_t    ivahd_config_base = 0;
 
 static uint32_t get_ivahd_base(void)
 {
-    if (!ivahd_base) {
+    if( !ivahd_base ) {
         ERROR("Chipset ID not set!");
-        while (TRUE) {
-            asm(" wfi");
+
+        while( TRUE ) {
+            asm (" wfi");
         }
     }
-    return ivahd_base;
+    return (ivahd_base);
 }
 
-static uint32_t get_cm_ivahd_base(void)
+static uint32_t get_ivahd_cm_base(void)
 {
-    if (!cm_ivahd_base) {
+    if (!ivahd_cm_base) {
         ERROR("Chipset ID not set!");
+
         while (TRUE) {
-            asm(" wfi");
+            asm (" wfi");
         }
     }
-    return cm_ivahd_base;
+    return ivahd_cm_base;
+}
+
+static uint32_t get_ivahd_config_base(void)
+{
+    if (!ivahd_config_base) {
+        ERROR("Chipset ID not set!");
+
+        while (TRUE) {
+            asm (" wfi");
+        }
+    }
+    return ivahd_config_base;
 }
 
 #define IVAHD_REG(off)            (*(volatile unsigned int *)(get_ivahd_base() + (off)))
 
-#define PM_IVAHD_PWRSTCTRL        IVAHD_REG(0xF00)
-#define RM_IVAHD_RSTCTRL          IVAHD_REG(0xF10)
-#define RM_IVAHD_RSTST            IVAHD_REG(0xF14)
+#define PM_IVAHD_PWRSTCTRL        IVAHD_REG(0x00)
+#define RM_IVAHD_RSTCTRL          IVAHD_REG(0x10)
+#define RM_IVAHD_RSTST            IVAHD_REG(0x14)
 
-#define CM_IVAHD_REG(off)         (*(volatile unsigned int *)(get_cm_ivahd_base() + (off)))
+#define IVAHD_CM_REG(off)         (*(volatile unsigned int *)(get_ivahd_cm_base() + (off)))
 
-#define CM_IVAHD_CLKSTCTRL        CM_IVAHD_REG(0x00)
-#define CM_IVAHD_CLKCTRL          CM_IVAHD_REG(0x20)
-#define CM_IVAHD_SL2_CLKCTRL      CM_IVAHD_REG(0x28)
+#if ((defined VAYU_ES10) || (defined BUILD_FOR_OMAP4))
+ #define CM_IVAHD_CLKSTCTRL        IVAHD_CM_REG(0x8F00)
+ #define CM_IVAHD_CLKCTRL          IVAHD_CM_REG(0x8F20)
+ #define CM_IVAHD_SL2_CLKCTRL      IVAHD_CM_REG(0x8F28)
+#else
+ #error Undefined Board Type
+#endif
+#elif (defined OMAP5432_ES20)
+ #define CM_IVAHD_CLKSTCTRL        IVAHD_CM_REG(0x9200)
+ #define CM_IVAHD_CLKCTRL          IVAHD_CM_REG(0x9220)
+ #define CM_IVAHD_SL2_CLKCTRL      IVAHD_CM_REG(0x9228)
+#else
+ #error Undefined Board Type
+#endif //OMAP5_ES10
 
-#define IVAHD_CONFIG_REG_BASE     (0xBA000000)
+#define IVAHD_CONFIG_REG_BASE     (get_ivahd_config_base())
 #define ICONT1_ITCM_BASE          (IVAHD_CONFIG_REG_BASE + 0x08000)
 #define ICONT2_ITCM_BASE          (IVAHD_CONFIG_REG_BASE + 0x18000)
 
@@ -105,24 +133,25 @@ static uint32_t get_cm_ivahd_base(void)
  *   0x0000 locally after reset.
  *******************************************************************************/
 
-const unsigned int icont_boot[] = {
-        0xEA000006,
-        0xEAFFFFFE,
-        0xEAFFFFFE,
-        0xEAFFFFFE,
-        0xEAFFFFFE,
-        0xEAFFFFFE,
-        0xEAFFFFFE,
-        0xEAFFFFFE,
-        0xE3A00000,
-        0xEE070F9A,
-        0xEE070F90,
-        0xE3A00000,
-        0xEAFFFFFE,
-        0xEAFFFFF1
+const unsigned int    icont_boot[] =
+{
+    0xEA000006,
+    0xEAFFFFFE,
+    0xEAFFFFFE,
+    0xEAFFFFFE,
+    0xEAFFFFFE,
+    0xEAFFFFFE,
+    0xEAFFFFFE,
+    0xEAFFFFFE,
+    0xE3A00000,
+    0xEE070F9A,
+    0xEE070F90,
+    0xE3A00000,
+    0xEAFFFFFE,
+    0xEAFFFFF1
 };
 
-static void ivahd_boot(void)
+void ivahd_boot(void)
 {
     int i;
     volatile unsigned int *icont1_itcm_base_addr =
@@ -330,6 +359,23 @@ void ivahd_release(void)
     }
 }
 
+/* This function is to check IVA clocks to make sure IVAHD is idle */
+void ivahd_idle_check(void)
+{
+    DEBUG("ivahd_idle check CM_IVAHD_CLKCTRL=0x%x CM_IVAHD_SL2_CLKCTRL=0x%x\n", CM_IVAHD_CLKCTRL, CM_IVAHD_SL2_CLKCTRL);
+
+    /* Ensure that IVAHD and SL2 idle */
+    while( !(CM_IVAHD_CLKCTRL & 0x00020000)) {
+        ;
+    }
+
+    while( !(CM_IVAHD_SL2_CLKCTRL & 0x00020000)) {
+        ;
+    }
+
+    DEBUG("ivahd_idle_check DONE - IVAHD and SL2 are in IDLE state\n");
+}
+
 static Bool allocFxn(IALG_MemRec *memTab, Int numRecs);
 static void freeFxn(IALG_MemRec *memTab, Int numRecs);
 
@@ -340,6 +386,9 @@ static void freeFxn(IALG_MemRec *memTab, Int numRecs);
 void ivahd_init(uint32_t chipset_id)
 {
     IRES_Status ret;
+    uint32_t          ivahd_base_pa = 0;
+    uint32_t          ivahd_cm_base_pa = 0;
+    uint32_t          ivahd_config_base_pa = 0;
     IRESMAN_Params rman_params = {
             .size = sizeof(IRESMAN_Params),
             .allocFxn = allocFxn,
@@ -348,29 +397,59 @@ void ivahd_init(uint32_t chipset_id)
 
     switch (chipset_id) {
     case 0x4430:
-        ivahd_base = 0xAA306000;
-        cm_ivahd_base = 0xAA008F00;
-        break;
+            ivahd_base_pa = 0x4A306F00;
+            break;
     case 0x4460:
     case 0x4470:
-        ivahd_base = 0xAA306000;
-        cm_ivahd_base = 0xAA008F00;
-        break;
+            ivahd_base_pa = 0x4A306F00;
+            break;
     case 0x5430:
+            ivahd_base_pa = 0x4AE06F00;
+            ivahd_cm_base_pa = 0x4A000000;
+            ivahd_config_base_pa = 0x5A000000;
+            break;
     case 0x5432:
-        ivahd_base = 0xAAE06300;
-        cm_ivahd_base = 0xAA009200;
-        break;
+            ivahd_base_pa = 0x4AE07200;
+            ivahd_cm_base_pa = 0x4A000000;
+            ivahd_config_base_pa = 0x5A000000;
+            break;
+    case 0x5436:
+            ivahd_base_pa = 0x4AE06F00;
+            ivahd_cm_base_pa = 0x4A000000;
+            ivahd_config_base_pa = 0x5A000000;
+            break;
     default:
-        ERROR("Invalid chipset-id: %x", chipset_id);
-        break;
+            ERROR("Invalid chipset-id: %x", chipset_id);
+            break;
     }
 
-    DEBUG("ivahd_base=%08x, cm_ivahd_base=%08x",
-                ivahd_base, cm_ivahd_base);
+    if (ivahd_base_pa) {
+        if (Resource_physToVirt(ivahd_base_pa, &ivahd_base)) {
+            ERROR("Unable to get ivahd_base\n");
+            return;
+        }
+    }
+
+    DEBUG("ivahd_base=%08x", ivahd_base);
+
+    if (ivahd_cm_base_pa) {
+        if (Resource_physToVirt(ivahd_cm_base_pa, &ivahd_cm_base)) {
+            ERROR("Unable to get ivahd_cm_base\n");
+            return;
+        }
+    }
+
+    DEBUG("ivahd_cm_base=%08x", ivahd_cm_base);
+
+    if (ivahd_config_base_pa) {
+        if (Resource_physToVirt(ivahd_config_base_pa, &ivahd_config_base)) {
+            ERROR("Unable to get ivahd_config_base\n");
+            return;
+        }
+    }
 
     /* bit of a hack.. not sure if there is a better way for this: */
-    HDVICP2_PARAMS.resetControlAddress[0] = ivahd_base + 0xF10;
+    HDVICP2_PARAMS.resetControlAddress[0] = ivahd_base + 0x10;
 
     ivahd_acquire();
 
@@ -421,6 +500,9 @@ end:
 static Bool allocFxn(IALG_MemRec memTab[], Int n)
 {
     Int i;
+#ifdef MEMORYSTATS_DEBUG
+    Memory_Stats    stats;
+#endif
 
     for (i = 0; i < n; i++) {
         Error_Block eb;
@@ -435,6 +517,12 @@ static Bool allocFxn(IALG_MemRec memTab[], Int n)
         }
 
         size = memTab[i].size + pad;
+
+#ifdef MEMORYSTATS_DEBUG
+        Memory_getStats(NULL, &stats);
+        INFO("Total: %d\tFree: %d\tLargest: %d", stats.totalSize,
+             stats.totalFreeSize, stats.largestFreeSize);
+#endif
 
         blk = Memory_alloc(NULL, size, memTab[i].alignment, &eb);
 
@@ -459,10 +547,22 @@ static void freeFxn(IALG_MemRec memTab[], Int n)
 {
     Int i;
 
+#ifdef MEMORYSTATS_DEBUG
+    Memory_Stats    stats;
+#endif
     for (i = 0; i < n; i++) {
         if (memTab[i].base != NULL) {
             MemHeader *hdr = P2H(memTab[i].base);
+#ifdef MEMORYSTATS_DEBUG
+            DEBUG("%d: free: %p/%p (%d)", n, hdr->ptr,
+                  memTab[i].base, hdr->size);
+#endif
             Memory_free(NULL, hdr->ptr, hdr->size);
         }
+#ifdef MEMORYSTATS_DEBUG
+        Memory_getStats(NULL, &stats);
+        INFO("Total: %d\tFree: %d\tLargest: %d", stats.totalSize,
+             stats.totalFreeSize, stats.largestFreeSize);
+#endif
     }
 }

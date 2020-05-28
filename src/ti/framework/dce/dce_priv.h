@@ -33,6 +33,9 @@
 #ifndef __DCE_PRIV_H__
 #define __DCE_PRIV_H__
 #include <ti/utils/osal/trace.h>
+#include <ti/xdais/dm/xdm.h>
+#include <ti/sdo/ce/video3/viddec3.h>
+#include <ti/sdo/ce/video2/videnc2.h>
 
 Bool dce_init(void);
 
@@ -41,7 +44,12 @@ Bool dce_init(void);
  */
 void ivahd_acquire(void);
 void ivahd_release(void);
+void ivahd_idle_check(void);
 void ivahd_init(uint32_t chipset_id);
+void ivahd_boot();
+
+XDM_DataSyncGetFxn H264E_GetDataFxn(XDM_DataSyncHandle dataSyncHandle, XDM_DataSyncDesc *dataSyncDesc);
+XDM_DataSyncPutFxn H264D_PutDataFxn(XDM_DataSyncHandle dataSyncHandle, XDM_DataSyncDesc *dataSyncDesc);
 
 #ifndef   DIM
 #  define DIM(a) (sizeof((a)) / sizeof((a)[0]))
@@ -60,7 +68,14 @@ void ivahd_init(uint32_t chipset_id);
 
 typedef struct MemHeader {
     uint32_t size;
-    void *ptr;       /* when used for BIOS heap blocks, just a raw ptr */
+    void    *ptr;       /* when used for BIOS heap blocks, just a raw ptr */
+    int32_t dma_buf_fd; /* shared dma buf fd */
+    uint32_t region;    /* mem region the buffer allocated from */
+    /* internal meta data for the buffer */
+    uint32_t offset;    /* offset for the actual data with in the buffer */
+    int32_t map_fd;     /* mmapped fd */
+    void * handle;      /*custom handle for the HLOS memallocator*/
+    int32_t flags;      /*Flag to hold memory attributes*/
 } MemHeader;
 
 #define P2H(p) (&(((MemHeader *)(p))[-1]))
@@ -71,4 +86,3 @@ typedef struct MemHeader {
 #endif
 
 #endif /* __DCE_PRIV_H__ */
-

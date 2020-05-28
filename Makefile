@@ -103,6 +103,16 @@ JOBS		?= 1
 PROFILE		?= release
 # Set debug/trace level from 0 to 4
 TRACELEVEL	?= 0
+# Offloads core to sysm3 code
+OFFLOAD		?= 1
+# Set to Non-SMP by default
+FORSMP		?= 1
+# Set Instrumentation to be allowed (ENABLE to enable it)
+SETINST		?= ENABLE
+# Set HW revision type- OMAP5:ES20, VAYU:ES10
+HWVERSION   ?= ES10
+# Set if Profiler needs to ON or OFF for the build
+PROFILER    ?= DISABLE
 
 all:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
