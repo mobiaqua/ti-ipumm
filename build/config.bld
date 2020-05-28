@@ -273,28 +273,28 @@ if (hdw_type == "OMAP5")
 {
     build_omap5 = true;
     HwType = hw_OMAP5;
-    ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_OMAP5";
+    target.ccOpts.suffix += " -DBUILD_FOR_OMAP5";
     HwVer = ES20;
     omap5_es20 = true;
-    ipu_tgt.ccOpts.suffix += " -DOMAP5432_ES20";
-    ipu_tgt.platform = ipu_tgt.platforms[7];
+    target.ccOpts.suffix += " -DOMAP5432_ES20";
+    target.platform = target.platforms[7];
 }
 else if (hdw_type == "VAYU")
 {
     HwType = hw_VAYU;
     HwVer = ES10;
     var build_vayu = true;
-    ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_VAYU";
-    ipu_tgt.ccOpts.suffix += " -DVAYU_ES10";
-    ipu_tgt.platform = ipu_tgt.platforms[8];
+    target.ccOpts.suffix += " -DBUILD_FOR_VAYU";
+    target.ccOpts.suffix += " -DVAYU_ES10";
+    target.platform = target.platforms[8];
 }
 else
 {
     HWType = hw_OMAP4;
     var build_omap4 = true;
     HwVer = ES20;
-    ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_OMAP4";
-    ipu_tgt.platform = ipu_tgt.platforms[6];
+    target.ccOpts.suffix += " -DBUILD_FOR_OMAP4";
+    target.platform = target.platforms[6];
 }
 
 Build.targets.$add(target);
