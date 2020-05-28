@@ -131,7 +131,7 @@ if (hdw_type == "OMAP5")
 }
 else if (hdw_type == "OMAP4")
 {
-/*  Memory Map for ti.platform.omap4430.ipu
+/*  Memory Map for ti.platforms.sdp4430.IPU
  *
  *  --- External Memory ---
  *  Virtual     Physical        Size            Comment
@@ -152,7 +152,7 @@ else if (hdw_type == "OMAP4")
         PM_DATA: { name: "PM_DATA", base: 0x9F070000, len:  0x00020000, space: "data", access: "RWX" }
     };
 
-    Build.platformTable["ti.platform.omap4430.ipu"] = {
+    Build.platformTable["ti.platforms.sdp4430.IPU"] = {
         externalMemoryMap: [
             [ "EXT_CODE", omap4430_ExtMemMapIpu.EXT_CODE ],
             [ "EXT_DATA", omap4430_ExtMemMapIpu.EXT_DATA ],
@@ -212,7 +212,7 @@ target.platforms = [
                       "ti.platform.omap4430.core1_512", //3
 		      "ti.platform.omap54xx.core0", //4
 		      "ti.platform.omap54xx.core1", //5
-                      "ti.platform.omap4430.ipu", //6
+		      "ti.platforms.sdp4430.IPU", //6
 		      "ti.platforms.sdp5430:IPU", //7
                       "ti.platforms.evmDRA7XX:ipu2", //8
 		    ];
