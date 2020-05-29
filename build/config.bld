@@ -143,7 +143,7 @@ else if (hdw_type == "OMAP4")
  *  9F06_0000   9F06_0000     1_0000  (  64 kB) EXC_DATA
  *  9F07_0000   9F07_0000     2_0000  ( 128 kB) PM_DATA (Power mgmt)
  */
-    var omap4430_ExtMemMapIpu = {
+    var sdp4430_ExtMemMapIpu = {
         EXT_CODE: { name: "EXT_CODE", base: 0x00004000, len:  0x005FC000, space: "code", access: "RWX" },
         EXT_DATA: { name: "EXT_DATA", base: 0x80000000, len:  0x00200000, space: "data", access: "RW" },
         EXT_HEAP: { name: "EXT_HEAP", base: 0x80200000, len:  0x02900000, space: "data", access: "RW" },
