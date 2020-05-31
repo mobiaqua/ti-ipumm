@@ -84,6 +84,7 @@ gnu.targets.arm.M4F ?=
 gnu.targets.arm.A15 ?=
 
 XDCARGS= profile=$(PROFILE) trace_level=$(TRACELEVEL) \
+    hw_type=$(HW_TYPE) \
     ti.targets.C64P=\"$(ti.targets.C64P)\" \
     ti.targets.C64T=\"$(ti.targets.C64T)\" \
     ti.targets.arm.elf.M3=\"$(ti.targets.arm.elf.M3)\" \
@@ -118,7 +119,6 @@ all:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baselib/.
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
 	$(ARMTOOLCHAINPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 -o=ducati-m3-ipu.xem3
-#	$(ARMTOOLCHAINPATH)/bin/strip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 -o=ducati-m3-ipu.xem3
 
 clean:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) clean -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baselib/.
