@@ -118,7 +118,7 @@ PROFILER    ?= DISABLE
 all:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baselib/.
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
-	$(ARMTOOLCHAINPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 -o=ducati-m3-ipu.xem3
+	$(ARMTOOLCHAINPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 -o=omap4-ipu-fw.xem3
 
 clean:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) clean -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baselib/.
