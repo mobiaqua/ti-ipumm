@@ -118,6 +118,7 @@ PROFILER    ?= DISABLE
 all:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baselib/.
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
+	cp $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 omap4-ipu-fw-symbols.xem3
 	$(ARMTOOLCHAINPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 -o=omap4-ipu-fw.xem3
 
 clean:
