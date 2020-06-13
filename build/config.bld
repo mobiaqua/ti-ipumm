@@ -216,6 +216,8 @@ else if (hdw_type == "VAYU")
     };
 }
 
+var TargetBuild = commonBld.getTargetBuild(arguments);
+    commonOpts += " -DHOST_TYPE=HOST_UNKNOWN "
 
 target.platforms = [
 		      "ti.platform.omap4430.core0", //0
