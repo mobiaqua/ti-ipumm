@@ -85,6 +85,7 @@ gnu.targets.arm.A15 ?=
 
 XDCARGS= profile=$(PROFILE) trace_level=$(TRACELEVEL) \
     hw_type=$(HW_TYPE) \
+    BIOS_type=$(BIOS_TYPE) \
     ti.targets.C64P=\"$(ti.targets.C64P)\" \
     ti.targets.C64T=\"$(ti.targets.C64T)\" \
     ti.targets.arm.elf.M3=\"$(ti.targets.arm.elf.M3)\" \

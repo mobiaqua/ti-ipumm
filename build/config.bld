@@ -47,11 +47,23 @@ for (x = 0; x < arguments.length; x++)
         // array.
         var hdw_type = arguments[x].split("=")[1];
     }
+    if (arguments[x].match(/^hw_version=/) )
+    {
+        // [1] operation is used on the return value of split(), which is an
+        // array.
+        var hw_ver = arguments[x].split("=")[1];
+    }
     if (arguments[x].match(/^prof_type=/) )
     {
         // [1] operation is used on the return value of split(), which is an
         // array.
         var prof_type = arguments[x].split("=")[1];
+    }
+    if (arguments[x].match(/^BIOS_type=/) )
+    {
+        // [1] operation is used on the return value of split(), which is an
+        // array.
+        var bios_type = arguments[x].split("=")[1];
     }
     if (arguments[x].match(/^trace_level=/) )
     {
