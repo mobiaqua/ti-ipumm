@@ -277,10 +277,16 @@ var VIRTIO = 0;
 var ZEBU = 0;
 var ES10 = 1;
 var ES20 = 2;
+
 var HwType = hw_OMAP4; //default omap4
 
 var HwVer = ES20; //Default ES2.0
-SMPmode = true;
+
+if (bios_type == "SMP")
+{
+    SMPmode = true;
+}
+
 if (hdw_type == "OMAP5")
 {
     build_omap5 = true;

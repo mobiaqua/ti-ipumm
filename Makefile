@@ -83,8 +83,10 @@ gnu.targets.arm.M4 ?=
 gnu.targets.arm.M4F ?=
 gnu.targets.arm.A15 ?=
 
-XDCARGS= profile=$(PROFILE) trace_level=$(TRACELEVEL) \
+XDCARGS= profile=$(PROFILE) \
+    trace_level=$(TRACELEVEL) \
     hw_type=$(HW_TYPE) \
+    hw_version=$(HW_VER) \
     BIOS_type=$(BIOS_TYPE) \
     ti.targets.C64P=\"$(ti.targets.C64P)\" \
     ti.targets.C64T=\"$(ti.targets.C64T)\" \
