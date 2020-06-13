@@ -394,11 +394,11 @@ void ivahd_init(uint32_t chipset_id)
 
     switch (chipset_id) {
     case 0x4430:
-            ivahd_base_pa = 0x4A306F00;
-            break;
     case 0x4460:
     case 0x4470:
             ivahd_base_pa = 0x4A306F00;
+            ivahd_cm_base_pa = 0x4A000000;
+            ivahd_config_base_pa = 0x5A000000;
             break;
     case 0x5430:
             ivahd_base_pa = 0x4AE06F00;
