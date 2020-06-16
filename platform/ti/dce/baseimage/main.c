@@ -82,6 +82,9 @@ void tools_ShowVersion()
     // ipummversion is needed here or else the compiler will remove ipummversion thinking that it is not used.
     System_printf("\n\n **** IPUMM VERSION INFO **** \n\nCompile DATE %s TIME %s \n", __DATE__, __TIME__, ipummversion);
 
+    System_printf("GIT IPUMM \n\tBRANCH : %s \n\tTAG : %s \n\tCOMMIT-ID : %s\n",
+                  ducati_ver_branch, ducati_ver_tag, ducati_ver_commit_id);
+
     System_printf("CODEC-VER BEGIN: \n");
 
     System_printf("\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n \n",

@@ -417,8 +417,8 @@ function GetVersionTag()
   status = {};
   var verInfo;
   var git_cmd = "git ";
-  var ipc_ver = "";
-  var ipumm_ver = "";
+  var ipc_ver = " IPC 3_50_01_00 ";
+  var ipumm_ver = " MMIP 3_00_15_00 ";
 
   var type_cmd = "type ";
   var flush_cmd = "echo ";
@@ -427,14 +427,14 @@ function GetVersionTag()
   Program.global.ducati_ver_branch = "local";
   ipumm_ver += ipc_ver;
   Program.global.ducati_ver_tag = ipumm_ver;
-  Program.global.ducati_ver_h264d = "";
-  Program.global.ducati_ver_mpeg4d = "";
-  Program.global.ducati_ver_mpeg2d = "";
-  Program.global.ducati_ver_vc1d = "";
-  Program.global.ducati_ver_mjpegd = "";
-  Program.global.ducati_ver_mjpege = "";
-  Program.global.ducati_ver_h264e = "";
-  Program.global.ducati_ver_mpeg4e = "";
+  Program.global.ducati_ver_h264d = "H264D-02.00.22.01";
+  Program.global.ducati_ver_mpeg4d = "MPEG4D-01.00.17.01";
+  Program.global.ducati_ver_mpeg2d = "MPEG2D-01.00.18.01";
+  Program.global.ducati_ver_vc1d = "VC1D-01.00.02.08";
+  Program.global.ducati_ver_mjpegd = "MJPEGD-01.00.16.01";
+  Program.global.ducati_ver_mjpege = "MJPEGE-01.00.17.01";
+  Program.global.ducati_ver_h264e = "H264E-02.00.09.01";
+  Program.global.ducati_ver_mpeg4e = "MPEG4E-01.00.02.01";
 
 
   /*Check the target environment */
@@ -492,7 +492,7 @@ function GetVersionTag()
   var lines = status.output.split('\n')
   var tail_pos = lines.length
   var GitTag = lines[0]
-  var MMIPtag = "MMIP ";
+  var MMIPtag = "IPUMM commit " + GitCommitId + " version" + ipumm_ver;
 
   Program.global.ducati_ver_tag=MMIPtag;
   print (Program.global.ducati_ver_tag);

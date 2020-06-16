@@ -45,7 +45,7 @@
 #include <ti/ipc/remoteproc/rsc_types.h>
 
 /* IPU Memory Map */
-#define L4_44XX_BASE            0x4a000000
+#define L4_44XX_BASE            0x4A000000
 
 #define L4_PERIPHERAL_L4CFG     (L4_44XX_BASE)
 #define IPU_PERIPHERAL_L4CFG    0xAA000000
