@@ -360,6 +360,7 @@ else
     {
         ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_OMAP4";
         ipu_tgt.ccOpts.suffix += " -DBUILD_FOR_SMP";
+        ipu_tgt.ccOpts.suffix += " -DOMAP4430_ES20";
         ipu_tgt.platform = ipu_tgt.platforms[6];
     }
     else
