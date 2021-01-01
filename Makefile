@@ -118,11 +118,15 @@ HWVERSION   ?= ES10
 # Set if Profiler needs to ON or OFF for the build
 PROFILER    ?= DISABLE
 
+OUTEXT      ?= xem4
+
+OUTNAME     ?= dra7-ipu2-fw
+
 all:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baselib/.
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/.
-	cp $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 omap4-ipu-fw-symbols.xem3
-	$(ARMTOOLCHAINPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.xem3 -o=omap4-ipu-fw.xem3
+	cp $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.$(OUTEXT) $(OUTNAME)-symbols.$(OUTEXT)
+	$(ARMTOOLCHAINPATH)/bin/armstrip -p $(DUCATIDCEMMSRC)/platform/ti/dce/baseimage/out/ipu/$(PROFILE)/ipu.$(OUTEXT) -o=$(OUTNAME).$(OUTEXT)
 
 clean:
 	$(XDCROOT)/xdc XDCARGS="$(XDCARGS)" XDCBUILDCFG=./build/config.bld --jobs=$(JOBS) clean -PD $(DUCATIDCEMMSRC)/platform/ti/dce/baselib/.
