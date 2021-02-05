@@ -81,8 +81,6 @@
 
 #define IPU_MEM_IPC_DATA        0x9F000000
 #define IPU_MEM_IPC_VRING       0xA0000000
-#define IPU_MEM_RPMSG_VRING0    0xA0000000
-#define IPU_MEM_RPMSG_VRING1    0xA0004000
 #define IPU_MEM_VRING_BUFS0     0xA0040000
 #define IPU_MEM_VRING_BUFS1     0xA0080000
 
@@ -118,6 +116,9 @@
 
 /* flip up bits whose indices represent features we support */
 #define RPMSG_IPU_C0_FEATURES   1
+
+
+#define RPMSG_VRING_ADDR_ANY    FW_RSC_ADDR_ANY
 
 struct my_resource_table {
     struct resource_table base;
@@ -212,8 +213,8 @@ struct my_resource_table ti_ipc_remoteproc_ResourceTable = {
         /* no config data */
     },
     /* the two vrings */
-    { IPU_MEM_RPMSG_VRING0, 4096, IPU_RPMSG_VQ0_SIZE, 1, 0 },
-    { IPU_MEM_RPMSG_VRING1, 4096, IPU_RPMSG_VQ1_SIZE, 2, 0 },
+    { RPMSG_VRING_ADDR_ANY, 4096, IPU_RPMSG_VQ0_SIZE, 1, 0 },
+    { RPMSG_VRING_ADDR_ANY, 4096, IPU_RPMSG_VQ1_SIZE, 2, 0 },
 
     {
         TYPE_CARVEOUT,
